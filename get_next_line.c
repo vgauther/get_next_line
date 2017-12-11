@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: vgauther <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/12/05 14:59:00 by vgauther          #+#    #+#             */
-/*   Updated: 2017/12/07 14:41:36 by vgauther         ###   ########.fr       */
+/*   Created: 2017/12/07 16:31:37 by vgauther          #+#    #+#             */
+/*   Updated: 2017/12/10 16:48:11 by vgauther         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,15 +32,15 @@ char	*ft_re(char *src, int ret)
 
 char	*ft_save(int fd, int i, int x, char *save)
 {
-	char			buf[BUFF_SIZE + 1];
-	int				ret;
+	char	buf[BUFF_SIZE + 1];
+	int		ret;
 
 	while ((ret = read(fd, buf, BUFF_SIZE)) > 0)
 	{
 		i = -1;
 		if (!(buf[ret] = 0) && save == NULL)
 		{
-			if (!(save = malloc(ret)))
+			if (!(save = malloc(ret + 1)))
 				return (NULL);
 			while (buf[++i])
 				save[x++] = buf[i];
@@ -57,31 +57,51 @@ char	*ft_save(int fd, int i, int x, char *save)
 	return (save);
 }
 
-int		get_next_line(int const fd, char **line)
+char	*ft_line(char **line2, char *str)
 {
-	static char	*save2;
-	int			i;
-	int			x;
-	char		tmp;
+	int i;
+	int x;
 
-	if (!(i = 0) && ((fd < 0 || line == NULL ||
-		!(save2)) && ((save2 = ft_save(fd, 0, 0, NULL)) == NULL)))
-		return (-1);
-	if (!(x = 0) && save2[0] == 0)
-		line[0] = ft_strdup("");
-	if (!(x = 0) && save2[0] == 0)
-		return (0);
-	while (save2[i] != '\n' && save2[i] != 0)
+	x = 0;
+	i = 0;
+	while (str[i] != '\n' && str[i])
 		i++;
-	if (!(line[0] = malloc(sizeof(char) * (i + 1))))
+	if (!(line2[0] = malloc(sizeof(char) * i + 1)))
+		return (NULL);
+	i = 0;
+	while (str[i] != '\n' && str[i])
+	{
+		line2[0][i] = str[i];
+		i++;
+	}
+	line2[0][i] = 0;
+	i += str[i] != 0 ? 1 : 0;
+	while (str[i] != 0)
+	{
+		str[x] = str[i];
+		i++;
+		x++;
+	}
+	str[x] = 0;
+	return (str);
+}
+
+int		get_next_line(const int fd, char **line)
+{
+	static char *str[1024];
+
+	if (fd < 0 || line == NULL || fd > 1024 || BUFF_SIZE < 1)
 		return (-1);
-	i = -1;
-	while (save2[++i] != 0 && save2[i] != '\n')
-		line[0][i] = save2[i];
-	line[0][i] = 0;
-	i += save2[i] != 0 ? 1 : 0;
-	while (save2[i] != 0)
-		save2[x++] = save2[i++];
-	save2[x] = 0;
+	if (!(str[fd]))
+		str[fd] = ft_save(fd, 0, 0, NULL);
+	if (str[fd] == NULL)
+		return (-1);
+	if (str[fd][0] == 0)
+	{
+		line[0] = NULL;
+		return (0);
+	}
+	if ((str[fd] = ft_line(line, str[fd])) == NULL)
+		return (-1);
 	return (1);
 }
